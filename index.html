@@ -44,10 +44,10 @@
             cursor: pointer;
         }
 
-       .scene.office { background-image: url('https://KulturniHod.github.io/dumbara-game/aksakal-game/images/office.jpg'); background-size: cover; }
-.scene.archive { background-image: url('https://KulturniHod.github.io/dumbara-game/aksakal-game/images/archive.jpg'); background-size: cover; }
-.scene.witness { background-image: url('https://KulturniHod.github.io/dumbara-game/aksakal-game/images/witness.jpg'); background-size: cover; }
-.scene.court { background-image: url('https://KulturniHod.github.io/dumbara-game/aksakal-game/images/court.jpg'); background-size: cover; }
+        .scene.office { background-image: url('images/office.jpg'); background-size: cover; }
+        .scene.archive { background-image: url('images/archive.jpg'); background-size: cover; }
+        .scene.witness { background-image: url('images/witness.jpg'); background-size: cover; }
+        .scene.court { background-image: url('images/court.jpg'); background-size: cover; }
 
         .dialogue-box {
             background: rgba(0, 0, 0, 0.85);
@@ -66,6 +66,18 @@
             font-weight: bold;
             font-size: 20px;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speaker-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #d4af37;
+            background: #1a1a2e;
         }
 
         .dialogue-text {
@@ -210,8 +222,8 @@
     const prologueScenes = [
         { speaker: 'Вы', text: 'Сельский совет. Небольшое здание в районном центре, где решается судьба участка земли.' },
         { speaker: 'Вы', text: 'Антагонист планирует построить здесь торгово-развлекательный центр. Но местные жители утверждают, что на этом месте находилось родовое кладбище и священная роща.' },
-        { speaker: 'Глава сельсовета', text: 'Добро пожаловать. Аксакалы расходятся во мнениях, архив частично сгорел. Помогите разобраться, кто говорит правду.' },
-        { speaker: 'Глава сельсовета', text: 'Я передаю вам три папки с показаниями старейшин и доступ к уцелевшим архивным материалам. Изучите всё внимательно.' }
+        { speaker: 'Глава сельсовета', text: 'Добро пожаловать. Аксакалы расходятся во мнениях, архив частично сгорел. Помогите разобраться, кто говорит правду.', avatar: 'images/head.jpg' },
+        { speaker: 'Глава сельсовета', text: 'Я передаю вам три папки с показаниями старейшин и доступ к уцелевшим архивным материалам. Изучите всё внимательно.', avatar: 'images/head.jpg' }
     ];
 
     const witnessStatements = [
@@ -232,9 +244,6 @@
     ];
 
     let prologueIndex = 0;
-    let currentWitnessIndex = 0;
-    let currentDocIndex = 0;
-    let currentExtraIndex = 0;
 
     const sceneDiv = document.getElementById('scene');
     const speakerNameSpan = document.getElementById('speakerName');
@@ -281,7 +290,11 @@
         
         if (prologueIndex < prologueScenes.length) {
             const scene = prologueScenes[prologueIndex];
-            speakerNameSpan.innerHTML = scene.speaker;
+            let avatarHtml = '';
+            if (scene.avatar) {
+                avatarHtml = `<img src="${scene.avatar}" class="speaker-avatar" alt="avatar">`;
+            }
+            speakerNameSpan.innerHTML = `${avatarHtml} ${scene.speaker}`;
             dialogueTextSpan.innerHTML = scene.text;
         } else {
             startInvestigation();
@@ -323,98 +336,50 @@
 
     function showWitnesses() {
         setBackground('witness');
-        currentWitnessIndex = 0;
-        showWitness(0);
-    }
-
-    function showWitness(index) {
-        if (index >= witnessStatements.length) {
-            startInvestigation();
-            return;
-        }
-        const w = witnessStatements[index];
-        speakerNameSpan.innerHTML = w.speaker;
-        dialogueTextSpan.innerHTML = w.text;
-        
-        gamePanelDiv.innerHTML = `
-            <div class="game-panel">
-                ${!state.evidence[w.id] ? `<button onclick="markWitness(${index})">Отметить как изученное</button>` : ''}
-                <button onclick="showWitness(${index + 1})">Следующий аксакал</button>
-                <button onclick="startInvestigation()">Вернуться к расследованию</button>
-            </div>
-        `;
-    }
-
-    function markWitness(index) {
-        const w = witnessStatements[index];
-        state.evidence[w.id] = true;
-        updateEvidenceCount();
-        tg.showAlert('Показания отмечены');
-        showWitness(index + 1);
+        showList(witnessStatements, 0, 'witness');
     }
 
     function showArchiveDocs() {
         setBackground('archive');
-        currentDocIndex = 0;
-        showDoc(0);
-    }
-
-    function showDoc(index) {
-        if (index >= archiveDocs.length) {
-            startInvestigation();
-            return;
-        }
-        const d = archiveDocs[index];
-        speakerNameSpan.innerHTML = d.name;
-        dialogueTextSpan.innerHTML = d.text;
-        
-        gamePanelDiv.innerHTML = `
-            <div class="game-panel">
-                ${!state.evidence[d.id] ? `<button onclick="markDoc(${index})">Отметить как изученное</button>` : ''}
-                <button onclick="showDoc(${index + 1})">Следующий документ</button>
-                <button onclick="startInvestigation()">Вернуться к расследованию</button>
-            </div>
-        `;
-    }
-
-    function markDoc(index) {
-        const d = archiveDocs[index];
-        state.evidence[d.id] = true;
-        updateEvidenceCount();
-        tg.showAlert('Документ отмечен');
-        showDoc(index + 1);
+        showList(archiveDocs, 0, 'doc');
     }
 
     function showExtraEvidence() {
         setBackground('witness');
-        currentExtraIndex = 0;
-        showExtra(0);
+        showList(extraEvidence, 0, 'extra');
     }
 
-    function showExtra(index) {
-        if (index >= extraEvidence.length) {
+    function showList(list, index, type) {
+        if (index >= list.length) {
             startInvestigation();
             return;
         }
-        const e = extraEvidence[index];
-        speakerNameSpan.innerHTML = e.name;
-        dialogueTextSpan.innerHTML = e.text;
+        const item = list[index];
+        speakerNameSpan.innerHTML = item.speaker || item.name;
+        dialogueTextSpan.innerHTML = item.text;
         
-        gamePanelDiv.innerHTML = `
-            <div class="game-panel">
-                ${!state.evidence[e.id] ? `<button onclick="markExtra(${index})">Отметить как изученное</button>` : ''}
-                <button onclick="showExtra(${index + 1})">Следующая улика</button>
-                <button onclick="startInvestigation()">Вернуться к расследованию</button>
-            </div>
-        `;
+        let buttons = `<div class="game-panel">`;
+        if (!state.evidence[item.id]) {
+            buttons += `<button onclick="markItem(${index}, '${type}')">Отметить как изученное</button>`;
+        }
+        buttons += `<button onclick="showList(${type === 'witness' ? 'witnessStatements' : (type === 'doc' ? 'archiveDocs' : 'extraEvidence')}, ${index + 1}, '${type}')">Далее</button>`;
+        buttons += `<button onclick="startInvestigation()">Вернуться к расследованию</button>`;
+        buttons += `</div>`;
+        
+        gamePanelDiv.innerHTML = buttons;
+        
+        window.currentList = list;
+        window.currentType = type;
+        window.currentIndex = index;
     }
 
-    function markExtra(index) {
-        const e = extraEvidence[index];
-        state.evidence[e.id] = true;
+    function markItem(index, type) {
+        let list = type === 'witness' ? witnessStatements : (type === 'doc' ? archiveDocs : extraEvidence);
+        const item = list[index];
+        state.evidence[item.id] = true;
         updateEvidenceCount();
-        tg.showAlert('Улика добавлена');
-        showExtra(index + 1);
+        tg.showAlert('Отмечено!');
+        showList(list, index + 1, type);
     }
 
     function finishInvestigation() {
