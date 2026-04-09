@@ -209,15 +209,15 @@
 
     const prologueScenes = [
         { speaker: 'Вы', text: 'Сельский совет. Небольшое здание в районном центре, где решается судьба участка земли.' },
-        { speaker: 'Вы', text: 'Антагонист планирует построить здесь торгово-развлекательный центр. Но местные жители утверждают, что на этом месте находилось родовое кладбище и священная роща.' },
+        { speaker: 'Вы', text: 'Полевин планирует построить здесь торгово-развлекательный центр. Но местные жители утверждают, что на этом месте находилось родовое кладбище и священная роща.' },
         { speaker: 'Глава сельсовета', text: 'Добро пожаловать. Аксакалы расходятся во мнениях, архив частично сгорел. Помогите разобраться, кто говорит правду.' },
         { speaker: 'Глава сельсовета', text: 'Я передаю вам три папки с показаниями старейшин и доступ к уцелевшим архивным материалам. Изучите всё внимательно.' }
     ];
 
     const witnessStatements = [
-        { speaker: 'Аксакал Раис', text: 'Я на этой земле вырос. Мой отец пас там скот, дед пас. Никаких могил я там не помню. Роща? Была роща, но её вырубили ещё при советской власти под пашню. В 1960-х там уже было поле. Антагонист предлагает построить центр, рабочие места появятся. А эти легенды про кладбище — молодёжь выдумывает, чтобы деньги сбить. Я против обмана.', id: 'rais' },
+        { speaker: 'Аксакал Раис', text: 'Я на этой земле вырос. Мой отец пас там скот, дед пас. Никаких могил я там не помню. Роща? Была роща, но её вырубили ещё при советской власти под пашню. В 1960-х там уже было поле. Полевин предлагает построить центр, рабочие места появятся. А эти легенды про кладбище — молодёжь выдумывает, чтобы деньги сбить. Я против обмана.', id: 'rais' },
         { speaker: 'Аксакал Вахит', text: 'Я помню, как в детстве отец водил меня туда. Там были старые могилы, камни с надписями. Не все разобрали, но отец говорил, что это род Юлдашевых. Последнее захоронение было в 1930-е. Потом в 1960-е пришли строители, сравняли холмы бульдозером, сделали поле. Но корни старых деревьев до сих пор там. Я сам видел. Память осталась.', id: 'vahit' },
-        { speaker: 'Аксакал Зухра', text: 'Я слышала от бабушки, что там была священная роща. Приносили дары, просили дождя. Но это было очень давно, ещё до революции. Документов у меня нет, только рассказы. Честно говоря, если нет ни могил, ни рощи, то и говорить не о чём. Антагонист предлагает построить центр, нам нужны рабочие места. Может, не стоит цепляться за то, чего уже нет?', id: 'zuhra' }
+        { speaker: 'Аксакал Зухра', text: 'Я слышала от бабушки, что там была священная роща. Приносили дары, просили дождя. Но это было очень давно, ещё до революции. Документов у меня нет, только рассказы. Честно говоря, если нет ни могил, ни рощи, то и говорить не о чём. Полевин предлагает построить центр, нам нужны рабочие места. Может, не стоит цепляться за то, чего уже нет?', id: 'zuhra' }
     ];
 
     const archiveDocs = [
@@ -228,7 +228,10 @@
 
     const extraEvidence = [
         { name: 'Бабушка Фатима, 92 года', text: 'В детстве нас туда не пускали. Мать говорила — там могилы старые, тревожить нельзя. А потом, в шестидесятых, приехали трактора, всё сровняли. Я сама видела, как камни вывозили. Мой муж тогда в колхозе работал, рассказывал, что бульдозеристы ругались — корни толстые были, технику ломали.', id: 'fatima' },
-        { name: 'Старая фотография из альбома, 1954 год', text: 'На обороте подпись карандашом: "Тептяри, 1954 год. Вид на восточную околицу". На снимке видно поле, на котором различимы несколько тёмных холмиков неправильной формы, а вдалеке — группа высоких деревьев, образующих почти правильный круг.', id: 'photo' }
+        { name: 'Старая фотография, 1954 год', 
+    text: 'На обороте подпись карандашом: "Тептяри, 1954 год. Вид на восточную околицу".',
+    image: 'images/old_photo.jpg',
+    id: 'photo'}
     ];
 
     let prologueIndex = 0;
@@ -392,11 +395,31 @@
     }
 
     function showExtra(index) {
-        if (index >= extraEvidence.length) {
-            startInvestigation();
-            return;
-        }
-        const e = extraEvidence[index];
+      function showExtra(index) {
+    if (index >= extraEvidence.length) {
+        startInvestigation();
+        return;
+    }
+    const e = extraEvidence[index];
+    
+    if (e.image) {
+        // Если есть картинка — показываем её с возможностью увеличения
+        speakerNameSpan.innerHTML = e.name;
+        dialogueTextSpan.innerHTML = e.text;
+        
+        gamePanelDiv.innerHTML = `
+            <div class="game-panel">
+                <div style="text-align: center; margin: 10px 0;">
+                    <img src="${e.image}" style="width: 100%; border-radius: 16px; cursor: pointer;" onclick="openImage('${e.image}')" alt="Фотография">
+                    <div style="font-size: 12px; color: #d4af37; margin-top: 5px;">Нажми на фото, чтобы увеличить</div>
+                </div>
+                ${!state.evidence[e.id] ? `<button onclick="markExtra(${index})">Отметить как изученное</button>` : ''}
+                <button onclick="showExtra(${index + 1})">Следующая улика</button>
+                <button onclick="startInvestigation()">Вернуться к расследованию</button>
+            </div>
+        `;
+    } else {
+        // Обычный текст
         speakerNameSpan.innerHTML = e.name;
         dialogueTextSpan.innerHTML = e.text;
         
@@ -408,7 +431,7 @@
             </div>
         `;
     }
-
+}
     function markExtra(index) {
         const e = extraEvidence[index];
         state.evidence[e.id] = true;
@@ -464,6 +487,38 @@
         }
     });
 
+function openImage(imageSrc) {
+    tg.showPopup({
+        title: 'Фотография, 1954 год',
+        message: 'Нажмите на изображение, чтобы закрыть',
+        buttons: [{type: 'ok'}]
+    });
+    // Создаём временное окно с увеличенным фото
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.95)';
+    overlay.style.zIndex = '1000';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.cursor = 'pointer';
+    
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    img.style.maxWidth = '90%';
+    img.style.maxHeight = '90%';
+    img.style.borderRadius = '16px';
+    img.style.border = '3px solid #d4af37';
+    
+    overlay.appendChild(img);
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+}
+        
     showPrologue();
     tg.ready();
 </script>
