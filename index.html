@@ -183,6 +183,24 @@
         .hidden {
             display: none;
         }
+        
+        .photo-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .photo-img {
+            width: 100%;
+            border-radius: 16px;
+            cursor: pointer;
+            border: 1px solid #d4af37;
+        }
+        
+        .photo-hint {
+            font-size: 12px;
+            color: #d4af37;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -207,6 +225,32 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     tg.MainButton.hide();
+
+    function openImage(imageSrc) {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.95)';
+        overlay.style.zIndex = '1000';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.cursor = 'pointer';
+        
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.style.maxWidth = '90%';
+        img.style.maxHeight = '90%';
+        img.style.borderRadius = '16px';
+        img.style.border = '3px solid #d4af37';
+        
+        overlay.appendChild(img);
+        overlay.onclick = () => overlay.remove();
+        document.body.appendChild(overlay);
+    }
 
     let state = {
         mode: 'narrative',
@@ -240,7 +284,7 @@
 
     const extraEvidence = [
         { name: 'Бабушка Фатима, 92 года', text: 'В детстве нас туда не пускали. Мать говорила — там могилы старые, тревожить нельзя. А потом, в шестидесятых, приехали трактора, всё сровняли. Я сама видела, как камни вывозили. Мой муж тогда в колхозе работал, рассказывал, что бульдозеристы ругались — корни толстые были, технику ломали.', id: 'fatima' },
-        { name: 'Старая фотография из альбома, 1954 год', text: 'На обороте подпись карандашом: "Тептяри, 1954 год. Вид на восточную околицу". На снимке видно поле, на котором различимы несколько тёмных холмиков неправильной формы, а вдалеке — группа высоких деревьев, образующих почти правильный круг.', id: 'photo' }
+        { name: 'Старая фотография, 1954 год', text: 'На обороте подпись карандашом: "Тептяри, 1954 год. Вид на восточную околицу".', image: 'images/old_photo.jpg', id: 'photo' }
     ];
 
     let prologueIndex = 0;
@@ -355,22 +399,36 @@
             return;
         }
         const item = list[index];
-        speakerNameSpan.innerHTML = item.speaker || item.name;
-        dialogueTextSpan.innerHTML = item.text;
         
-        let buttons = `<div class="game-panel">`;
-        if (!state.evidence[item.id]) {
-            buttons += `<button onclick="markItem(${index}, '${type}')">Отметить как изученное</button>`;
+        if (type === 'extra' && item.image) {
+            // Показываем картинку с возможностью увеличения
+            speakerNameSpan.innerHTML = item.name;
+            dialogueTextSpan.innerHTML = item.text;
+            
+            gamePanelDiv.innerHTML = `
+                <div class="game-panel">
+                    <div class="photo-container">
+                        <img src="${item.image}" class="photo-img" onclick="openImage('${item.image}')" alt="Фотография">
+                        <div class="photo-hint">Нажми на фото, чтобы увеличить</div>
+                    </div>
+                    ${!state.evidence[item.id] ? `<button onclick="markItem(${index}, '${type}')">Отметить как изученное</button>` : ''}
+                    <button onclick="showList(${type === 'witness' ? 'witnessStatements' : (type === 'doc' ? 'archiveDocs' : 'extraEvidence')}, ${index + 1}, '${type}')">Следующая улика</button>
+                    <button onclick="startInvestigation()">Вернуться к расследованию</button>
+                </div>
+            `;
+        } else {
+            // Обычный текст
+            speakerNameSpan.innerHTML = item.speaker || item.name;
+            dialogueTextSpan.innerHTML = item.text;
+            
+            gamePanelDiv.innerHTML = `
+                <div class="game-panel">
+                    ${!state.evidence[item.id] ? `<button onclick="markItem(${index}, '${type}')">Отметить как изученное</button>` : ''}
+                    <button onclick="showList(${type === 'witness' ? 'witnessStatements' : (type === 'doc' ? 'archiveDocs' : 'extraEvidence')}, ${index + 1}, '${type}')">Следующая улика</button>
+                    <button onclick="startInvestigation()">Вернуться к расследованию</button>
+                </div>
+            `;
         }
-        buttons += `<button onclick="showList(${type === 'witness' ? 'witnessStatements' : (type === 'doc' ? 'archiveDocs' : 'extraEvidence')}, ${index + 1}, '${type}')">Далее</button>`;
-        buttons += `<button onclick="startInvestigation()">Вернуться к расследованию</button>`;
-        buttons += `</div>`;
-        
-        gamePanelDiv.innerHTML = buttons;
-        
-        window.currentList = list;
-        window.currentType = type;
-        window.currentIndex = index;
     }
 
     function markItem(index, type) {
