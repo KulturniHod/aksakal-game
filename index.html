@@ -315,7 +315,7 @@
         // Если есть аватар — добавляем картинку
         let avatarHtml = '';
         if (scene.avatar) {
-            avatarHtml = `<img src="${scene.avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #d4af37; margin-right: 12px; vertical-align: middle;" alt="avatar">`;
+            avatarHtml = `<img src="${scene.avatar}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #d4af37; margin-right: 12px; vertical-align: middle;" alt="avatar">`;
         }
         
         speakerNameSpan.innerHTML = `${avatarHtml} ${scene.speaker}`;
