@@ -302,21 +302,28 @@
         }
     }
 
-    function showPrologue() {
-        setBackground('office');
-        gamePanelDiv.innerHTML = '';
-        evidenceCountDiv.classList.add('hidden');
-        warningMessageDiv.classList.add('hidden');
-        clickHint.style.display = 'block';
+   function showPrologue() {
+    setBackground('office');
+    gamePanelDiv.innerHTML = '';
+    evidenceCountDiv.classList.add('hidden');
+    warningMessageDiv.classList.add('hidden');
+    clickHint.style.display = 'block';
+    
+    if (prologueIndex < prologueScenes.length) {
+        const scene = prologueScenes[prologueIndex];
         
-        if (prologueIndex < prologueScenes.length) {
-            const scene = prologueScenes[prologueIndex];
-            speakerNameSpan.innerHTML = scene.speaker;
-            dialogueTextSpan.innerHTML = scene.text;
-        } else {
-            startInvestigation();
+        // Если есть аватар — добавляем картинку
+        let avatarHtml = '';
+        if (scene.avatar) {
+            avatarHtml = `<img src="${scene.avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #d4af37; margin-right: 12px; vertical-align: middle;" alt="avatar">`;
         }
+        
+        speakerNameSpan.innerHTML = `${avatarHtml} ${scene.speaker}`;
+        dialogueTextSpan.innerHTML = scene.text;
+    } else {
+        startInvestigation();
     }
+}
 
     function startInvestigation() {
         state.mode = 'investigation';
