@@ -348,15 +348,15 @@
         `;
     }
 
-    function tryFinishInvestigation() {
-        const count = getEvidenceCount();
-        if (count === TOTAL_EVIDENCE) {
-            finishInvestigation();
-        } else {
-            showWarning();
-            tg.showAlert(`Собрано только ${count} из ${TOTAL_EVIDENCE} улик. Продолжите расследование!`);
-        }
+ function tryFinishInvestigation() {
+    const count = getEvidenceCount();
+    if (count === TOTAL_EVIDENCE) {
+        askVerdict();  // ← меняем здесь
+    } else {
+        showWarning();
+        tg.showAlert(`Собрано только ${count} из ${TOTAL_EVIDENCE} улик. Продолжите расследование!`);
     }
+}
 
     function showWitnesses() {
         setBackground('witness');
@@ -473,20 +473,52 @@
     }
 
     function finishInvestigation() {
-        state.mode = 'final';
-        setBackground('court');
-        speakerNameSpan.innerHTML = 'Суд аксакалов';
-        dialogueTextSpan.innerHTML = 'Вы собрали все улики. Какая стратегия вам ближе?';
-        
+    // Этот вызов теперь идёт после правильного ответа на вопрос
+    state.mode = 'final';
+    setBackground('court');
+    speakerNameSpan.innerHTML = 'Суд аксакалов';
+    dialogueTextSpan.innerHTML = 'Вы собрали все улики и верно определили статус земли. Какая стратегия вам ближе?';
+    
+    gamePanelDiv.innerHTML = `
+        <div class="game-panel">
+            <div class="choice-btn" onclick="makeChoice('harsh')">Жёсткое разоблачение</div>
+            <div class="choice-btn" onclick="makeChoice('soft')">Мягкое убеждение</div>
+            <div class="choice-btn" onclick="makeChoice('compromise')">Компромисс</div>
+        </div>
+    `;
+}
+
+function askVerdict() {
+    state.mode = 'verdict';
+    setBackground('court');
+    speakerNameSpan.innerHTML = 'Решение суда';
+    dialogueTextSpan.innerHTML = 'Вы изучили все улики. Собранные доказательства указывают на то, что на этом месте находилось священное место и родовое кладбище?';
+    
+    gamePanelDiv.innerHTML = `
+        <div class="game-panel">
+            <div class="choice-btn" onclick="handleVerdict(true)">Да, земля была священной</div>
+            <div class="choice-btn" onclick="handleVerdict(false)">Нет, доказательств недостаточно</div>
+        </div>
+    `;
+}
+
+function handleVerdict(isSacred) {
+    if (isSacred) {
+        // Правильный вывод — переходим к выбору стратегии
+        finishInvestigation();
+    } else {
+        // Неправильный вывод — возвращаем к расследованию
+        tg.showAlert('Вы приняли неверное решение. Перечитайте улики внимательнее.');
+        speakerNameSpan.innerHTML = 'Неверное решение';
+        dialogueTextSpan.innerHTML = 'Вы поспешили с выводами. Вернитесь к уликам и изучите их ещё раз. Только после этого можно выносить справедливое решение.';
         gamePanelDiv.innerHTML = `
             <div class="game-panel">
-                <div class="choice-btn" onclick="makeChoice('harsh')">Жёсткое разоблачение</div>
-                <div class="choice-btn" onclick="makeChoice('soft')">Мягкое убеждение</div>
-                <div class="choice-btn" onclick="makeChoice('compromise')">Компромисс</div>
+                <button onclick="startInvestigation()">Вернуться к расследованию</button>
             </div>
         `;
     }
-
+}
+    
     function makeChoice(choice) {
         let epilogue = '';
         if (choice === 'harsh') {
